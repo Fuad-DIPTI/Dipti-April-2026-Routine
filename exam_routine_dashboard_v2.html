@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exam Routine Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--font-sans)}
+    .hero{background:linear-gradient(135deg,#1a1150 0%,#2d1e7e 50%,#4a2fb5 100%);border-radius:16px;padding:24px 28px 20px;margin-bottom:20px;color:#fff;position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.05)}
+    .hero::after{content:'';position:absolute;bottom:-30px;right:60px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.04)}
+    .hero-title{font-size:20px;font-weight:500;margin-bottom:2px;position:relative}
+    .hero-sub{font-size:13px;opacity:.65;position:relative}
+    .stats-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:18px;position:relative}
+    .stat-card{background:rgba(255,255,255,.12);border:0.5px solid rgba(255,255,255,.18);border-radius:10px;padding:10px 14px;backdrop-filter:blur(10px)}
+    .stat-val{font-size:22px;font-weight:500;line-height:1}
+    .stat-lbl{font-size:11px;opacity:.65;margin-top:3px}
+    .stat-card.mid .stat-val{color:#7fffd4}
+    .stat-card.fin .stat-val{color:#c4b5fd}
+    .controls{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+    .tab-bar{display:flex;gap:4px;flex:1;min-width:0;flex-wrap:wrap}
+    .tab{padding:7px 14px;border:0.5px solid var(--color-border-secondary);border-radius:8px;background:transparent;cursor:pointer;font-size:13px;color:var(--color-text-secondary);white-space:nowrap;transition:all .15s}
+    .tab:hover{background:var(--color-background-secondary);color:var(--color-text-primary)}
+    .tab.active{background:#3c3489;color:#fff;border-color:#3c3489;font-weight:500}
+    .tab .cnt{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:rgba(255,255,255,.25);font-size:10px;margin-left:5px;vertical-align:middle}
+    .tab:not(.active) .cnt{background:var(--color-background-secondary);color:var(--color-text-secondary)}
+    .search-wrap{position:relative;flex-shrink:0;width:220px}
+    .search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:.4}
+    .search{width:100%;padding:7px 12px 7px 32px;border:0.5px solid var(--color-border-secondary);border-radius:8px;background:var(--color-background-primary);color:var(--color-text-primary);font-size:13px}
+    .search:focus{outline:none;border-color:#3c3489}
+    .table-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:12px;overflow:hidden}
+    .table-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:0.5px solid var(--color-border-secondary)}
+    .table-head-left{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+    .table-head-left span{font-size:12px;color:var(--color-text-secondary);font-weight:400;margin-left:6px}
+    .dl-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:7px;background:#3c3489;color:#fff;font-size:12px;font-weight:500;border:none;cursor:pointer;transition:all .15s}
+    .dl-btn:hover{background:#2d2470}
+    .dl-btn:active{transform:scale(.97)}
+    .dl-btn svg{flex-shrink:0}
+    .tw{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    thead tr{background:var(--color-background-secondary)}
+    th{text-align:left;padding:9px 14px;font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+    td{padding:9px 14px;border-top:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);vertical-align:middle}
+    tbody tr:hover td{background:var(--color-background-secondary)}
+    .bm{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;background:#dcfce7;color:#166534}
+    .bf{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;background:#ede9fe;color:#5b21b6}
+    .bn{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;background:#f3f4f6;color:#6b7280}
+    .day-pill{display:inline-block;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:500}
+    .day-Sat{background:#fef3c7;color:#92400e}
+    .day-Sun{background:#fee2e2;color:#991b1b}
+    .day-Mon{background:#dbeafe;color:#1e40af}
+    .day-Tue{background:#d1fae5;color:#065f46}
+    .day-Wed{background:#ede9fe;color:#5b21b6}
+    .day-Thu{background:#fce7f3;color:#9d174d}
+    .day-Fri{background:#e0f2fe;color:#0c4a6e}
+    .prog-tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);margin:1px}
+    .sec-header{display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--color-background-secondary);border-top:0.5px solid var(--color-border-secondary);border-bottom:0.5px solid var(--color-border-secondary)}
+    .sec-header-lbl{font-size:12px;font-weight:500;color:var(--color-text-primary)}
+    .sec-cnt{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#3c3489;color:#fff;font-size:10px;font-weight:500}
+    .first-sec .sec-header{border-top:none}
+    .empty{padding:40px;text-align:center;color:var(--color-text-secondary);font-size:14px}
+  </style>
+</head>
+<body class="container">
+  <div style="padding:.5rem 0">
+    <div class="hero">
+      <div class="hero-title">April 2026 — Exam Routine</div>
+      <div class="hero-sub">Sat → Fri · All batches · Mid-term &amp; Final</div>
+      <div class="stats-grid" id="stats"></div>
+    </div>
+
+    <div class="controls">
+      <div class="tab-bar" id="tabs"></div>
+      <div class="search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input class="search" id="srch" placeholder="Search…"/>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-head">
+        <div class="table-head-left" id="view-label">All exams <span id="row-count"></span></div>
+        <button class="dl-btn" id="dl-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Excel
+        </button>
+      </div>
+      <div class="tw" id="content"></div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+  <script>
+  const E=[
+  {day:'Sat',subject:'Data Mining',type:'FINAL',teacher:'AAF',batch:'91+90',room:'509',prog:'PGD, DDSMLP, DSEP'},
+  {day:'Sat',subject:'PostgreSQL',type:'FINAL',teacher:'AAF',batch:'91',room:'509',prog:'PGD, DDSMLP, DSEP'},
+  {day:'Sat',subject:'Ethical Hacking',type:'FINAL',teacher:'SS',batch:'91',room:'504',prog:'PGD, DIICS, DHNC'},
+  {day:'Sat',subject:'A+',type:'FINAL',teacher:'AR',batch:'89',room:'508',prog:'DHNC'},
+  {day:'Sat',subject:'MikroTik',type:'FINAL',teacher:'AR',batch:'89',room:'508',prog:'DHNC'},
+  {day:'Sat',subject:'React',type:'FINAL',teacher:'AA',batch:'91',room:'509',prog:'DSEP, DFSWDM'},
+  {day:'Sat',subject:'Video Editing',type:'MID',teacher:'MONNA',batch:'90',room:'508',prog:'D3D, DAIED'},
+  {day:'Sat',subject:'Max',type:'FINAL',teacher:'MHI',batch:'89',room:'506',prog:'DAIED'},
+  {day:'Sat',subject:'Python',type:'FINAL',teacher:'AZ',batch:'91',room:'509',prog:'PGD, DDSMLP, DSEP'},
+  {day:'Sat',subject:'Data Viz.',type:'FINAL',teacher:'AZ',batch:'91',room:'509',prog:'PGD, DDSMLP, DSEP'},
+  {day:'Sun',subject:'AutoCAD',type:'FINAL',teacher:'MHI',batch:'90, 91',room:'506',prog:'DAIED'},
+  {day:'Mon',subject:'Graphic Design',type:'FINAL',teacher:'MA',batch:'91',room:'506',prog:'DSADM, D3D, DAIED'},
+  {day:'Tue',subject:'Django',type:'MID',teacher:'AAF',batch:'90',room:'504',prog:'DSEP'},
+  {day:'Tue',subject:'Graphic Design',type:'MID',teacher:'MA',batch:'92',room:'506',prog:'D3D, DAIED'},
+  {day:'Tue',subject:'Graphic Design',type:'MID',teacher:'MA',batch:'88',room:'506',prog:'DAIED'},
+  {day:'Tue',subject:'Adv. Graphic Design',type:'MID',teacher:'MA',batch:'90',room:'506',prog:'DGDF, D3D, DAIED'},
+  {day:'Tue',subject:'SOM',type:'MID',teacher:'AKZ',batch:'92',room:'509',prog:'—'},
+  {day:'Tue',subject:'AutoCAD',type:'FINAL',teacher:'MHI',batch:'89',room:'508',prog:'CONF'},
+  {day:'Tue',subject:'Graphic Design',type:'MID',teacher:'MA',batch:'92',room:'509',prog:'D3D, DAIED, DGDF'},
+  {day:'Tue',subject:'Sketch',type:'FINAL',teacher:'BZ',batch:'91',room:'507',prog:'DAIED, D3D'},
+  {day:'Tue',subject:'Video Editing',type:'FINAL',teacher:'MUNNA',batch:'89',room:'506',prog:'DFSDM, DGDF, D3D, DAIED'},
+  {day:'Tue',subject:'Adv. Graphic Design',type:'FINAL',teacher:'MA',batch:'89',room:'504',prog:'DGDF'},
+  {day:'Tue',subject:'Django',type:'FINAL',teacher:'AAF',batch:'88',room:'508',prog:'DSEP'},
+  {day:'Wed',subject:'Video Editing',type:'MID',teacher:'MHI',batch:'90',room:'506',prog:'DAIED, DDM'},
+  {day:'Wed',subject:'Node.JS',type:'MID',teacher:'AA',batch:'90',room:'504',prog:'DSEP, DFSWDM'},
+  {day:'Wed',subject:'React',type:'MID',teacher:'MM',batch:'92',room:'509',prog:'DSEP'},
+  {day:'Wed',subject:'Maya',type:'FINAL',teacher:'MHI',batch:'91',room:'506',prog:'D3D'},
+  {day:'Thu',subject:'Interior Design',type:'FINAL',teacher:'MAH',batch:'91',room:'508',prog:'DAIED'},
+  {day:'Thu',subject:'Interior Design',type:'MID',teacher:'MAH',batch:'92',room:'508',prog:'DAIED'},
+  {day:'Thu',subject:'AutoCAD',type:'MID',teacher:'MHI',batch:'92',room:'506',prog:'DAIED'},
+  {day:'Thu',subject:'Maya',type:'MID',teacher:'MHI',batch:'92',room:'506',prog:'D3D'},
+  {day:'Thu',subject:'Max',type:'MID',teacher:'MHI',batch:'90',room:'506',prog:'DAIED, D3D'},
+  {day:'Thu',subject:'Express.JS',type:'MID',teacher:'AA',batch:'90',room:'504',prog:'DSEP, DFSWDM'},
+  {day:'Thu',subject:'Design & Materials',type:'MID',teacher:'MAH',batch:'90',room:'508',prog:'DAIED'},
+  {day:'Thu',subject:'MS Office',type:'FINAL',teacher:'MR',batch:'91',room:'504',prog:'SHORT'},
+  {day:'Thu',subject:'Design & Materials',type:'MID',teacher:'MAH',batch:'89',room:'508',prog:'DAIED'},
+  {day:'Thu',subject:'Penetration Testing',type:'FINAL',teacher:'RANA SEN',batch:'89, 90',room:'504',prog:'DIICS'},
+  {day:'Fri',subject:'Statistics',type:'FINAL',teacher:'AZ',batch:'91',room:'509',prog:'PGD, DDSMLP'},
+  {day:'Fri',subject:'Linear Algebra',type:'FINAL',teacher:'AZ',batch:'91',room:'509',prog:'PGD, DDSMLP'},
+  {day:'Fri',subject:'CCNA',type:'FINAL',teacher:'SS',batch:'91',room:'504',prog:'PGD, DIICS, DHNC'},
+  {day:'Fri',subject:'Linux',type:'FINAL',teacher:'SS',batch:'91',room:'504',prog:'PGD, DIICS, DHNC'},
+  {day:'Fri',subject:'Linux',type:'MID',teacher:'AR',batch:'90',room:'508',prog:'DHNC'},
+  {day:'Fri',subject:'A+',type:'MID',teacher:'AR',batch:'91, 92',room:'508',prog:'DHNC'},
+  {day:'Fri',subject:'Python (Wk2)',type:'FINAL',teacher:'AZ',batch:'91',room:'509',prog:'PGD, DDSMLP'},
+  {day:'Fri',subject:'Data Visualization (Wk2)',type:'FINAL',teacher:'AZ',batch:'91',room:'509',prog:'PGD, DDSMLP'},
+  {day:'Fri',subject:'Python',type:'MID',teacher:'AZ',batch:'92',room:'501',prog:'PGD, DDSMLP, DSEP'},
+  {day:'Fri',subject:'SEO',type:'FINAL',teacher:'MK',batch:'89',room:'OL',prog:'DFSDM'},
+  {day:'Fri',subject:'Entrepreneurship Strategy',type:'FINAL',teacher:'MK',batch:'91',room:'506',prog:'DFSDM'},
+  {day:'Fri',subject:'SEO',type:'MID',teacher:'MK',batch:'90',room:'506',prog:'DFSDM'},
+  {day:'Fri',subject:'SEM',type:'MID',teacher:'MK',batch:'90',room:'506',prog:'DFSDM'},
+  {day:'Fri',subject:'SMM & CM',type:'MID',teacher:'MK',batch:'92',room:'506',prog:'DFSDM'},
+  {day:'Fri',subject:'CCNA',type:'MID',teacher:'SS',batch:'92',room:'504',prog:'PGD, DIICS, DHNC'},
+  {day:'Fri',subject:'Python',type:'MID',teacher:'MR',batch:'92',room:'501',prog:'PGD, DDSMLP, DSEP'},
+  {day:'Fri',subject:'Machine Learning',type:'FINAL',teacher:'HZ',batch:'89',room:'501',prog:'DDSMLP'},
+  {day:'Fri',subject:'Machine Learning',type:'MID',teacher:'HZ',batch:'90',room:'501',prog:'DDSMLP'},
+  {day:'Fri',subject:'SEM',type:'FINAL',teacher:'MK',batch:'89',room:'506',prog:'DFSDM'},
+  {day:'Fri',subject:'SMM',type:'FINAL',teacher:'MK',batch:'91',room:'506',prog:'DFSDM'},
+  {day:'Fri',subject:'Entrepreneurship',type:'MID',teacher:'MK',batch:'92',room:'506',prog:'DFSDM'},
+  {day:'Fri',subject:'PostgreSQL (Wk2)',type:'FINAL',teacher:'AZ',batch:'91',room:'509',prog:'PGD, DDSMLP, DSEP'},
+  {day:'Fri',subject:'Data Mining (Wk2)',type:'FINAL',teacher:'AZ',batch:'91+90',room:'509',prog:'PGD, DDSMLP, DSEP'},
+  ];
+
+  const TABS=['All','MID','FINAL','By Batch','By Teacher','By Room'];
+  let curTab='All',curQ='';
+
+  function bdg(t){return t==='MID'?'<span class="bm">MID</span>':t==='FINAL'?'<span class="bf">FINAL</span>':'<span class="bn">—</span>';}
+  function dayPill(d){return `<span class="day-pill day-${d}">${d}</span>`;}
+  function progTags(p){if(p==='—'||!p)return '<span style="color:var(--color-text-secondary);font-size:12px">—</span>';return p.split(',').map(x=>`<span class="prog-tag">${x.trim()}</span>`).join('');}
+
+  function getFiltered(){
+    let d=E;
+    if(curTab==='MID')d=d.filter(e=>e.type==='MID');
+    if(curTab==='FINAL')d=d.filter(e=>e.type==='FINAL');
+    if(curQ){const q=curQ.toLowerCase();d=d.filter(e=>[e.subject,e.teacher,e.batch,e.room,e.prog,e.day].some(v=>v.toLowerCase().includes(q)));}
+    return d;
+  }
+
+  function flatRows(d){
+    return d.map(e=>`<tr><td>${dayPill(e.day)}</td><td><strong style="font-weight:500">${e.subject}</strong></td><td>${bdg(e.type)}</td><td>${e.teacher}</td><td>${e.batch}</td><td>${e.room}</td><td>${progTags(e.prog)}</td></tr>`).join('');
+  }
+
+  const FLAT_HEAD='<thead><tr><th>Day</th><th>Subject</th><th>Type</th><th>Teacher</th><th>Batch</th><th>Room</th><th>Programs</th></tr></thead>';
+
+  function flatHtml(d){
+    if(!d.length)return '<div class="empty">No matching exams found.</div>';
+    return `<table>${FLAT_HEAD}<tbody>${flatRows(d)}</tbody></table>`;
+  }
+
+  function groupHtml(d,key){
+    const g={};
+    d.forEach(e=>{const k=e[key];if(!g[k])g[k]=[];g[k].push(e);});
+    const ks=Object.keys(g).sort();
+    if(!ks.length)return '<div class="empty">No matching exams found.</div>';
+    const lbl={batch:'Batch',teacher:'Teacher',room:'Room'}[key];
+    return ks.map((k,i)=>{
+      const items=g[k];
+      let hdr,rows;
+      if(key==='batch'){
+        hdr='<th>Day</th><th>Subject</th><th>Type</th><th>Teacher</th><th>Room</th><th>Programs</th>';
+        rows=items.map(e=>`<tr><td>${dayPill(e.day)}</td><td><strong style="font-weight:500">${e.subject}</strong></td><td>${bdg(e.type)}</td><td>${e.teacher}</td><td>${e.room}</td><td>${progTags(e.prog)}</td></tr>`).join('');
+      } else if(key==='teacher'){
+        hdr='<th>Day</th><th>Subject</th><th>Type</th><th>Batch</th><th>Room</th><th>Programs</th>';
+        rows=items.map(e=>`<tr><td>${dayPill(e.day)}</td><td><strong style="font-weight:500">${e.subject}</strong></td><td>${bdg(e.type)}</td><td>${e.batch}</td><td>${e.room}</td><td>${progTags(e.prog)}</td></tr>`).join('');
+      } else {
+        hdr='<th>Day</th><th>Subject</th><th>Type</th><th>Teacher</th><th>Batch</th><th>Programs</th>';
+        rows=items.map(e=>`<tr><td>${dayPill(e.day)}</td><td><strong style="font-weight:500">${e.subject}</strong></td><td>${bdg(e.type)}</td><td>${e.teacher}</td><td>${e.batch}</td><td>${progTags(e.prog)}</td></tr>`).join('');
+      }
+      return `<div class="sec-header${i===0?' first-sec':''}"><span class="sec-cnt">${items.length}</span><span class="sec-header-lbl">${lbl}: ${k}</span></div><table><thead><tr>${hdr}</tr></thead><tbody>${rows}</tbody></table>`;
+    }).join('');
+  }
+
+  function render(){
+    const d=getFiltered();
+    const t=curTab;
+    let h='';
+    if(t==='By Batch')h=groupHtml(d,'batch');
+    else if(t==='By Teacher')h=groupHtml(d,'teacher');
+    else if(t==='By Room')h=groupHtml(d,'room');
+    else h=flatHtml(d);
+    document.getElementById('content').innerHTML=h;
+    const n=d.length;
+    document.getElementById('row-count').textContent=`${n} exam${n!==1?'s':''}`;
+    const lbl={All:'All exams',MID:'Mid-term exams',FINAL:'Final exams','By Batch':'Grouped by batch','By Teacher':'Grouped by teacher','By Room':'Grouped by room'}[t];
+    document.getElementById('view-label').innerHTML=`${lbl} <span id="row-count">${n} exam${n!==1?'s':''}</span>`;
+  }
+
+  function renderTabs(){
+    const mid=E.filter(e=>e.type==='MID').length;
+    const fin=E.filter(e=>e.type==='FINAL').length;
+    document.getElementById('tabs').innerHTML=TABS.map(t=>{
+      const badge=t==='MID'?`<span class="cnt">${mid}</span>`:t==='FINAL'?`<span class="cnt">${fin}</span>`:'';
+      return `<button class="tab${curTab===t?' active':''}" onclick="setTab('${t}')">${t}${badge}</button>`;
+    }).join('');
+  }
+
+  function renderStats(){
+    const mid=E.filter(e=>e.type==='MID').length;
+    const fin=E.filter(e=>e.type==='FINAL').length;
+    const rooms=[...new Set(E.map(e=>e.room))].length;
+    const teachers=[...new Set(E.map(e=>e.teacher))].length;
+    const days=[...new Set(E.map(e=>e.day))].length;
+    document.getElementById('stats').innerHTML=`
+      <div class="stat-card"><div class="stat-val">${E.length}</div><div class="stat-lbl">Total exams</div></div>
+      <div class="stat-card mid"><div class="stat-val">${mid}</div><div class="stat-lbl">MID exams</div></div>
+      <div class="stat-card fin"><div class="stat-val">${fin}</div><div class="stat-lbl">FINAL exams</div></div>
+      <div class="stat-card"><div class="stat-val">${teachers}</div><div class="stat-lbl">Teachers</div></div>
+      <div class="stat-card"><div class="stat-val">${rooms}</div><div class="stat-lbl">Rooms</div></div>`;
+  }
+
+  function downloadExcel(){
+    const d=getFiltered();
+    const t=curTab;
+    const wb=XLSX.utils.book_new();
+
+    function makeSheet(rows,cols){
+      const ws=XLSX.utils.json_to_sheet(rows,{header:cols});
+      const colW=cols.map(c=>({wch:Math.max(c.length,Math.max(...rows.map(r=>(r[c]||'').toString().length),10))}));
+      ws['!cols']=colW;
+      return ws;
+    }
+
+    if(t==='By Batch'||t==='By Teacher'||t==='By Room'){
+      const key={['By Batch']:'batch',['By Teacher']:'teacher',['By Room']:'room'}[t];
+      const g={};
+      d.forEach(e=>{const k=e[key];if(!g[k])g[k]=[];g[k].push(e);});
+      Object.keys(g).sort().forEach(k=>{
+        const items=g[k];
+        const safeName=k.replace(/[\\\/\*\?\[\]:]/g,'').substring(0,31);
+        let cols,rows;
+        if(key==='batch'){cols=['Day','Subject','Type','Teacher','Room','Programs'];rows=items.map(e=>({'Day':e.day,'Subject':e.subject,'Type':e.type,'Teacher':e.teacher,'Room':e.room,'Programs':e.prog}));}
+        else if(key==='teacher'){cols=['Day','Subject','Type','Batch','Room','Programs'];rows=items.map(e=>({'Day':e.day,'Subject':e.subject,'Type':e.type,'Batch':e.batch,'Room':e.room,'Programs':e.prog}));}
+        else{cols=['Day','Subject','Type','Teacher','Batch','Programs'];rows=items.map(e=>({'Day':e.day,'Subject':e.subject,'Type':e.type,'Teacher':e.teacher,'Batch':e.batch,'Programs':e.prog}));}
+        XLSX.utils.book_append_sheet(wb,makeSheet(rows,cols),safeName||'Sheet');
+      });
+    } else {
+      const cols=['Day','Subject','Type','Teacher','Batch','Room','Programs'];
+      const rows=d.map(e=>({'Day':e.day,'Subject':e.subject,'Type':e.type,'Teacher':e.teacher,'Batch':e.batch,'Room':e.room,'Programs':e.prog}));
+      const sheetName={All:'All Exams',MID:'MID Exams',FINAL:'FINAL Exams'}[t]||t;
+      XLSX.utils.book_append_sheet(wb,makeSheet(rows,cols),sheetName);
+    }
+
+    const fname={All:'All_Exams',MID:'MID_Exams',FINAL:'FINAL_Exams','By Batch':'By_Batch','By Teacher':'By_Teacher','By Room':'By_Room'}[t];
+    XLSX.writeFile(wb,`April_2026_Exam_Routine_${fname}.xlsx`);
+  }
+
+  window.setTab=function(t){curTab=t;renderTabs();render();};
+  document.getElementById('srch').addEventListener('input',e=>{curQ=e.target.value;render();});
+  document.getElementById('dl-btn').addEventListener('click',downloadExcel);
+
+  renderStats();renderTabs();render();
+  </script>
+</body>
+</html>
+
+
+
+
+
+
